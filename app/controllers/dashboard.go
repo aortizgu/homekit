@@ -9,6 +9,7 @@ import (
 	"github.com/revel/revel"
 )
 
+// Dashboard live view of the system
 type Dashboard struct {
 	Application
 }
@@ -22,11 +23,13 @@ func (c Dashboard) checkUser() revel.Result {
 	return nil
 }
 
+// Index returns the index web page for dashboard
 func (c Dashboard) Index() revel.Result {
 	c.Log.Info("Fetching index")
 	return c.Render()
 }
 
+// Live websocket entry
 func (c Dashboard) Live(user string, ws revel.ServerWebSocket) revel.Result {
 	// Make sure the websocket is valid.
 	if ws == nil {
@@ -83,6 +86,4 @@ func (c Dashboard) Live(user string, ws revel.ServerWebSocket) revel.Result {
 			log.Printf("ws client says[%s]\n", msg)
 		}
 	}
-
-	return nil
 }

@@ -23,6 +23,7 @@ const (
 	relayStateURI    string = "/relay?state="
 )
 
+// DeviceManager manages the devices
 type DeviceManager struct {
 }
 
@@ -37,19 +38,17 @@ func (c DeviceManager) refresh() (string, string, error) {
 	resp, err := http.Get("http://" + caldera + domain + uptimeURI)
 	if err != nil {
 		return uptime, temp, err
-	} else {
-		defer resp.Body.Close()
-		body, _ := ioutil.ReadAll(resp.Body)
-		uptime = string(body)
 	}
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
+	uptime = string(body)
 	resp, err = http.Get("http://" + caldera + domain + tempURI)
 	if err != nil {
 		return uptime, temp, err
-	} else {
-		defer resp.Body.Close()
-		body, _ := ioutil.ReadAll(resp.Body)
-		temp = string(body)
 	}
+	defer resp.Body.Close()
+	body, _ = ioutil.ReadAll(resp.Body)
+	temp = string(body)
 	return uptime, temp, err
 }
 
@@ -72,10 +71,10 @@ func (c DeviceManager) evaluateState(temp float64) (bool, bool) {
 				dayRule := rules.Days[weekday]
 				if dayRule.Enabled {
 					hours, minutes, _ := time.Now().Clock()
-					min_start := dayRule.Start.Hour*60 + dayRule.Start.Minute
-					min_stop := dayRule.End.Hour*60 + dayRule.End.Minute
-					min_current := hours*60 + minutes
-					if min_current >= min_start && min_current <= min_stop {
+					minStart := dayRule.Start.Hour*60 + dayRule.Start.Minute
+					minStop := dayRule.End.Hour*60 + dayRule.End.Minute
+					minCurrent := hours*60 + minutes
+					if minCurrent >= minStart && minCurrent <= minStop {
 						active = true
 					}
 				}
@@ -102,6 +101,7 @@ func (c DeviceManager) setState(state bool) error {
 	return nil
 }
 
+// Run runnable method of DeviceManager
 func (c DeviceManager) Run() {
 	uptime, temp, err := c.refresh()
 	active := false
@@ -117,7 +117,10 @@ func (c DeviceManager) Run() {
 			status = "ok"
 			active, manual = c.evaluateState(tempF)
 			//store temp
-			meassurement := models.Meassurement{caldera, tempF, time.Now().Unix()}
+			meassurement := models.Meassurement{
+				Device: caldera,
+				Val:    tempF,
+				Time:   time.Now().Unix()}
 			if err := gorp.Db.Map.Insert(&meassurement); err != nil {
 				panic(err)
 			}
@@ -141,6 +144,7 @@ func (c DeviceManager) Run() {
 
 func init() {
 	revel.OnAppStart(func() {
+		jobs.Now(DeviceManager{})
 		jobs.Schedule("@every 10s", DeviceManager{})
 	})
 }

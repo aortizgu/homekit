@@ -13,10 +13,12 @@ import (
 	"github.com/revel/revel"
 )
 
+// Application main application to login and clients
 type Application struct {
 	gorpController.Controller
 }
 
+// AddUser adds user name to vier args
 func (c Application) AddUser() revel.Result {
 	if user := c.connected(); user != nil {
 		c.ViewArgs["user"] = user
@@ -45,7 +47,6 @@ func (c Application) getUser(username string) (user *models.User) {
 	err = c.Txn.SelectOne(user, c.Db.SqlStatementBuilder.Select("*").From("User").Where("Username=?", username))
 	if err != nil {
 		if err != sql.ErrNoRows {
-			//c.Txn.Select(user, c.Db.SqlStatementBuilder.Select("*").From("User").Limit(1))
 			count, _ := c.Txn.SelectInt(c.Db.SqlStatementBuilder.Select("count(*)").From("User"))
 			c.Log.Error("Failed to find user", "user", username, "error", err, "count", count)
 		}
@@ -55,14 +56,12 @@ func (c Application) getUser(username string) (user *models.User) {
 	return
 }
 
+// Index show index page
 func (c Application) Index() revel.Result {
-	if c.connected() != nil {
-		//return c.Redirect(routes.Hotels.Index())
-	}
-	c.Flash.Error("Please log in first")
 	return c.Render()
 }
 
+// Login login client
 func (c Application) Login(username, password string) revel.Result {
 	user := c.getUser(username)
 	if user != nil {
@@ -79,6 +78,7 @@ func (c Application) Login(username, password string) revel.Result {
 	return c.Redirect(routes.Application.Index())
 }
 
+// Logout logout client
 func (c Application) Logout() revel.Result {
 	for k := range c.Session {
 		delete(c.Session, k)

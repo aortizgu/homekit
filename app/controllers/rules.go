@@ -15,77 +15,88 @@ import (
 )
 
 const (
-	MONDAY    = iota
-	TUESDAY   = iota
-	WEDNESDAY = iota
-	THURSDAY  = iota
-	FRIDAY    = iota
-	SATURDAY  = iota
-	SUNDAY    = iota
-	WEEK_DAYS = iota
+	configFilename string = "rules.json"
+	weekDays       int    = 7
 )
 
-type TimeRule struct {
+type timeRule struct {
 	Hour   int
 	Minute int
 }
 
-type DayRule struct {
+type dayRule struct {
 	Enabled bool
 	Name    string
-	Start   TimeRule
-	End     TimeRule
+	Start   timeRule
+	End     timeRule
 }
 
-type WeekRule struct {
+type weekRule struct {
 	DeviceName      string
 	TemperatureInt  int
 	TemperatureFrac int
 	Manual          bool
-	Days            [WEEK_DAYS]DayRule
+	Days            [weekDays]dayRule
 }
 
-func (c WeekRule) GetFloatTemp() float64 {
+func (c weekRule) GetFloatTemp() float64 {
 	if c.TemperatureFrac == 0 {
 		return float64(c.TemperatureInt)
-	} else {
-		return float64(c.TemperatureInt) + float64(c.TemperatureFrac)/10
 	}
+	return float64(c.TemperatureInt) + float64(c.TemperatureFrac)/10
 }
 
-type Rules struct {
-	Application
-}
+// DeviceRulesStorage storage of rules inxed by device name
+type DeviceRulesStorage map[string]weekRule
 
-func (c Rules) checkUser() revel.Result {
-	log.Println("checkuser")
-	if user := c.connected(); user == nil {
-		c.Flash.Error("Please log in first")
-		return c.Redirect(routes.Application.Index())
-	}
-	return nil
-}
-
-func getDevices() []string {
-	devices := make([]string, 0, len(DeviceRules))
-	for device := range DeviceRules {
+func (c DeviceRulesStorage) getDevices() []string {
+	devices := make([]string, 0, len(c))
+	for device := range c {
 		devices = append(devices, device)
 	}
 	return devices
 }
 
-func (c Rules) Index() revel.Result {
-	devices := getDevices()
-	return c.Render(devices)
+func (c DeviceRulesStorage) storeConfig() {
+	jsonFile, _ := json.MarshalIndent(DeviceRules, "", " ")
+	_ = ioutil.WriteFile(configFilename, jsonFile, 0644)
 }
 
-func (c Rules) GetDeviceRules(device string) revel.Result {
-	if rules, ok := DeviceRules[device]; ok {
-		devices := getDevices()
-		return c.Render(device, devices, rules)
+func (c DeviceRulesStorage) loadConfig() {
+	jsonFile, err := os.Open(configFilename)
+	if err != nil {
+		fmt.Println(err)
 	}
-	return c.Redirect(routes.Rules.Index())
+	defer jsonFile.Close()
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	json.Unmarshal(byteValue, &DeviceRules)
 }
+
+func (c DeviceRulesStorage) loadRules() revel.Result {
+	if fileExists(configFilename) {
+		c.loadConfig()
+		log.Println(DeviceRules)
+	} else {
+		rule := weekRule{
+			DeviceName: "Calefacción",
+		}
+		for index := 0; index < weekDays; index++ {
+			rule.Days[index].Name = weekDaysName[index]
+			rule.Days[index].Enabled = false
+		}
+		DeviceRules["caldera"] = rule
+		c.storeConfig()
+	}
+	return nil
+}
+
+var (
+	// DeviceRules configuration of rules of devices
+	DeviceRules  = make(DeviceRulesStorage)
+	weekDaysName = []string{
+		"Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo",
+	}
+)
 
 func getHMFromString(s string) (int, int, error) {
 	log.Println("getHMFromString", s)
@@ -104,6 +115,36 @@ func getHMFromString(s string) (int, int, error) {
 	return h, m, nil
 }
 
+// Rules web page to change configuration for devices
+type Rules struct {
+	Application
+}
+
+func (c Rules) checkUser() revel.Result {
+	log.Println("checkuser")
+	if user := c.connected(); user == nil {
+		c.Flash.Error("Please log in first")
+		return c.Redirect(routes.Application.Index())
+	}
+	return nil
+}
+
+// Index shows index page of rules
+func (c Rules) Index() revel.Result {
+	devices := DeviceRules.getDevices()
+	return c.Render(devices)
+}
+
+// GetDeviceRules shows rules for an input device
+func (c Rules) GetDeviceRules(device string) revel.Result {
+	if rules, ok := DeviceRules[device]; ok {
+		devices := DeviceRules.getDevices()
+		return c.Render(device, devices, rules)
+	}
+	return c.Redirect(routes.Rules.Index())
+}
+
+// SetDeviceRules set rules for an input device
 func (c Rules) SetDeviceRules(device string) revel.Result {
 	if rules, ok := DeviceRules[device]; ok {
 		c.Log.Info("Seting device rules  ", c.Params)
@@ -121,14 +162,14 @@ func (c Rules) SetDeviceRules(device string) revel.Result {
 		}
 		manual := c.Params.Get("manual")
 		rules.Manual = manual == "on"
-		for i := 0; i < WEEK_DAYS; i++ {
+		for i := 0; i < weekDays; i++ {
 			iStr := strconv.Itoa(i)
-			d := DayRule{}
+			d := dayRule{}
 			d.Name = weekDaysName[i]
 			enabled := c.Params.Get("enabled-" + iStr)
 			d.Enabled = enabled == "on"
 
-			s := TimeRule{}
+			s := timeRule{}
 			start := c.Params.Get("start-" + iStr)
 			if h, m, err := getHMFromString(start); err == nil {
 				s.Hour = h
@@ -136,7 +177,7 @@ func (c Rules) SetDeviceRules(device string) revel.Result {
 				d.Start = s
 			}
 
-			e := TimeRule{}
+			e := timeRule{}
 			end := c.Params.Get("end-" + iStr)
 			if h, m, err := getHMFromString(end); err == nil {
 				e.Hour = h
@@ -148,22 +189,11 @@ func (c Rules) SetDeviceRules(device string) revel.Result {
 		}
 
 		DeviceRules[device] = rules
-		storeConfig()
+		DeviceRules.storeConfig()
 		return c.Redirect(routes.Rules.GetDeviceRules(device))
 	}
 	return c.Redirect(routes.Rules.Index())
 }
-
-var (
-	DeviceRules  = make(map[string]WeekRule)
-	weekDaysName = []string{
-		"Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo",
-	}
-)
-
-const (
-	ConfigFilename = "rules.json"
-)
 
 func fileExists(filename string) bool {
 	info, err := os.Stat(filename)
@@ -173,39 +203,6 @@ func fileExists(filename string) bool {
 	return !info.IsDir()
 }
 
-func storeConfig() {
-	jsonFile, _ := json.MarshalIndent(DeviceRules, "", " ")
-	_ = ioutil.WriteFile(ConfigFilename, jsonFile, 0644)
-}
-
-func loadConfig() {
-	jsonFile, err := os.Open(ConfigFilename)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer jsonFile.Close()
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-	json.Unmarshal(byteValue, &DeviceRules)
-}
-
-func loadRules() revel.Result {
-	if fileExists(ConfigFilename) {
-		loadConfig()
-		log.Println(DeviceRules)
-	} else {
-		rule := WeekRule{
-			DeviceName: "Calefacción",
-		}
-		for index := 0; index < WEEK_DAYS; index++ {
-			rule.Days[index].Name = weekDaysName[index]
-			rule.Days[index].Enabled = false
-		}
-		DeviceRules["caldera"] = rule
-		storeConfig()
-	}
-	return nil
-}
-
 func init() {
-	loadRules()
+	DeviceRules.loadRules()
 }
