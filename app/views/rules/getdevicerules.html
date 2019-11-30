@@ -1,0 +1,69 @@
+{{set . "title" "Reglas de dispositivo"}}
+{{template "header.html" . }}
+
+<div class="my-container">
+    <div class="row">
+        {{template "devices.html" .}}
+        {{ $d := .device }}
+        {{if .rules}}
+        <div class="col-xs-12 col-md-10 col-lg-10" id="main-map-holder">
+            <div class="row">
+                <form action="{{url "Rules.Index"}}/{{$d}}" method="post">
+                    <div class="col-xs-12 col-md-12">
+                        <H3>Reglas de {{.rules.DeviceName}}</H3>
+                        Límite de temperatura: <input id="rules-temp-major" type="number" name="temp-int" min="0" max="100"
+                            value="{{.rules.TemperatureInt}}">
+                        . <input id="rules-temp-minor" type="number" name="temp-frac" min="0" max="9"
+                            value="{{.rules.TemperatureFrac}}"> ºC
+                    </div>
+                    {{$manual := .rules.Manual}}
+                    <span>Manual</span><input type="checkbox" name="manual" {{if $manual}}checked{{end}} />
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range $index, $element := .rules.Days}}
+                            <tr {{if $manual}}class="disabled"{{end}} >
+                                <td>{{.Name}}</td>
+                                <td>
+                                    <span>Habilitado</span><input type="checkbox" name="enabled-{{$index}}" {{if .Enabled}}checked{{end}} {{if $manual}}disabled{{end}}/>
+                                    <span style="margin-left: 2em" class="glyphicon glyphicon-time"></span>Comienzo:<input name="start-{{$index}}"
+                                        class="clockpicker" type="text" class="form-control"
+                                        value="{{.Start.Hour}}:{{.Start.Minute}}" {{if $manual}}disabled{{end}}>
+                                    <span style="margin-left: 2em" class="glyphicon glyphicon-time"></span>Fin:<input name="end-{{$index}}"
+                                        class="clockpicker" type="text" class="form-control"
+                                        value="{{.End.Hour}}:{{.End.Minute}}" {{if $manual}}disabled{{end}}>
+                                </td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                    <div class="row">
+                        <div class="col-xs-12 col-md-12">
+                            <input type="submit" class="btn btn-primary btn-block" value="Guardar"/>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {{end}}
+    </div>
+</div>
+
+<script type="text/javascript">
+    var $input = $('.clockpicker').clockpicker({
+        placement: 'bottom',
+        align: 'left',
+        donetext: 'Listo',
+        autoclose: false,
+        vibrate: true,
+        fromnow: 0
+    });
+
+    $input.clockpicker('show');
+</script>
+{{template "footer.html" .}}

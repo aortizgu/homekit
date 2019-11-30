@@ -41,6 +41,8 @@ func init() {
 			"Name":     100,
 		})
 
+		t = Dbm.AddTable(models.Meassurement{})
+
 		rgorp.Db.TraceOn(revel.AppLog)
 		Dbm.CreateTables()
 

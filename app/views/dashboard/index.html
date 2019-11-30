@@ -1,78 +1,48 @@
 {{set . "title" "Home"}}
 {{template "header.html" .}}
 
-<div class="my-container" id="container-info">
-  <div class="row">
-    <div class="col-xs-12 col-md-2 col-lg-2 inst-drop">
-      <H3>Sensors</H3>
-      <ul class="list-sensors" id="info-list-sensors"></ul>
-    </div>
-    <div class="col-xs-12 col-md-10 col-lg-10" id="main-map-holder">
-      <div class="row">
-        <div class="col-xs-12 col-md-12">
-          <H3>Sensor info</H3>
-          <div class="post-sensor-selected">
-            <p>
-              Name: <span id="info-name"></span>
-            </p>
-            <p>
-              Location: <span id="info-location"></span>
-            </p>
-            <p>
-              Mac: <span id="info-mac"></span>
-            </p>
-            <p>
-              Active: <span id="info-active"></span>
-            </p>
-            <p>
-              Temperature: <span id="info_temp"></span>
-            </p>
-            <p>
-              First Measure: <span id="info-since"></span>
-            </p>
-            <p>
-              Last Measure: <span id="info-last"></span>
-            </p>
-            <p>
-              Measures: <span id="info-amount"></span>
-            </p>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-xs-12 col-md-12">
-          <H3>Sensor Graph</H3>
-          <div class="post-sensor-selected">
-            Show <select class="form-group" data-size="6" id="info-show-last">
-              <option>10</option>
-              <option>20</option>
-              <option selected>30</option>
-              <option>40</option>
-              <option>50</option>
-              <option>60</option>
-            </select> Last Meassurements <br />
-            <button class="btn btn-primary  post-sensor-selected" type="button" data-toggle="collapse"
-              data-target="#collapseFilter" aria-expanded="false" aria-controls="collapseFilter">Search
-              Meassurements</button>
-          </div>
-          <div class="collapse" id="collapseFilter">
-            <br />
-            <p>
-              Date From: <input type="text" class="clendar-search" id="info-calendar-since">
-            </p>
-            <p>
-              Date Until: <input type="text" class="clendar-search" id="info-calendar-until">
-            </p>
-          </div>
+<div class="col-sm-6 col-sm-offset-3">
 
-        </div>
-      </div>
-    </div>
+  <h1>WebSocket — You are now chatting as {{.user}}
+    <a href="/">Leave the chat room</a></h1>
+
+  <div id="newMessage">
+    <input type="text" id="message" autocomplete="off" autofocus>
+    <input type="submit" value="send" id="send">
   </div>
+
+  <div id="dashboard">
+    <h1>GeeksforGeeks</h1>
+  </div>
+
   <div class="chart-container">
     <canvas class="post-sensor-selected" id="myChart" width="400" height="100"></canvas>
   </div>
 </div>
-</body>
+
+<script type="text/javascript">
+  // Create a socket
+  var socket = new WebSocket('ws://' + window.location.host + '/dashboard/live?user={{.user}}')
+  // Display a message
+  var display = function (data) {
+    $('#dashboard').append("<br>" + data + "</br>");
+  }
+  // Message received on the socket
+  socket.onmessage = function (event) {
+    console.log("new data " + event.data)
+    display(event.data)
+  }
+  $('#send').click(function (e) {
+    var message = $('#message').val()
+    $('#message').val('')
+    socket.send(JSON.stringify(message))
+  });
+  $('#message').keypress(function (e) {
+    if (e.charCode == 13 || e.keyCode == 13) {
+      $('#send').click()
+      e.preventDefault()
+    }
+  })
+</script>
 
 {{template "footer.html" .}}

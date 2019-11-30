@@ -1,0 +1,8 @@
+<div class="col-xs-12 col-md-2 col-lg-2 inst-drop">
+    <H3>Dispositivos</H3>
+    <ul>
+        {{range .devices}}
+            <a href="{{url "Rules.Index"}}/{{.}}"><li>{{.}}</li></a>
+        {{end}}
+    </ul>
+</div>

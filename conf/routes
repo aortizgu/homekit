@@ -10,7 +10,10 @@ GET     /                                       Application.Index
 POST    /login                                  Application.Login
 GET     /logout                                 Application.Logout
 GET     /dashboard                              Dashboard.Index
+WS      /dashboard/live                         Dashboard.Live
 GET     /rules                                  Rules.Index
+GET     /rules/:device                          Rules.GetDeviceRules
+POST    /rules/:device                          Rules.SetDeviceRules
 
 # Map static resources from the /app/public folder to the /public path
 GET     /public/*filepath                       Static.Serve("public")
