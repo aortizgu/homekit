@@ -6,7 +6,7 @@
         {{template "devices.html" .}}
         {{ $d := .device }}
         {{if .rules}}
-        <div class="col-xs-12 col-md-10 col-lg-10" id="main-map-holder">
+        <div class="col-xs-12 col-md-10 col-lg-10">
             <div class="row">
                 <form action="{{url "Rules.Index"}}/{{$d}}" method="post">
                     <div class="col-xs-12 col-md-12">
@@ -59,7 +59,7 @@
         placement: 'bottom',
         align: 'left',
         donetext: 'Listo',
-        autoclose: false,
+        autoclose: true,
         vibrate: true,
         fromnow: 0
     });

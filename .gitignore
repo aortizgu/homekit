@@ -3,3 +3,4 @@ none
 rules.json
 app/routes/routes.go
 app/tmp/*
+homekit.tar.gz

@@ -1,10 +1,10 @@
 package controllers
 
 import (
+	"homekit/app/models"
+	"homekit/app/msgbroker"
 	"homekit/app/routes"
 	"log"
-
-	"homekit/app/msgbroker"
 
 	"github.com/revel/revel"
 )
@@ -27,6 +27,17 @@ func (c Dashboard) checkUser() revel.Result {
 func (c Dashboard) Index() revel.Result {
 	c.Log.Info("Fetching index")
 	return c.Render()
+}
+
+// Meassurements get all registered meassurements
+func (c Dashboard) Meassurements() revel.Result {
+	c.Log.Info("Fetching Meassurements")
+	meassurements, err := c.Txn.Select(models.Meassurement{},
+		c.Db.SqlStatementBuilder.Select("*").From("Meassurement"))
+	if err != nil {
+		c.Log.Error("Error trying to get Meassurement from DB.", err)
+	}
+	return c.RenderJSON(meassurements)
 }
 
 // Live websocket entry

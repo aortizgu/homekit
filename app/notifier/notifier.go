@@ -1,6 +1,9 @@
-package controllers
+package notifier
 
-import "net/smtp"
+import (
+	"net/smtp"
+	"time"
+)
 
 const (
 	mailSource         string = "homekit.ortiz.gutierrez.adrian@gmail.com"
@@ -30,13 +33,10 @@ func sendMail(recipient, subject, msg string) error {
 		"\r\n" +
 		msg + "\r\n")
 	auth := smtp.PlainAuth("", from, password, server.host)
-	err := smtp.SendMail(server.serverName(), auth, from, to, message)
-	if err != nil {
-		return err
-	}
-	return nil
+	return smtp.SendMail(server.serverName(), auth, from, to, message)
 }
 
+// SendMail sends a mail to configured recipients
 func SendMail(subject, msg string) error {
 	for _, recipient := range mailRecipients {
 		err := sendMail(recipient, subject, msg)
@@ -47,14 +47,17 @@ func SendMail(subject, msg string) error {
 	return nil
 }
 
+// NotifyCalderaState sends a mail to configured recipients about the state of the device
 func NotifyCalderaState(active, manual bool) {
 	subject := "Calefacción "
 	msg := "Se ha encendico la calefacción de manera "
 	if active {
-		subject += "Encendida"
+		subject += "Encendida "
 	} else {
-		subject += "Apagada"
+		subject += "Apagada "
+		msg = "Se ha apagado la calefacción de manera "
 	}
+	subject += time.Now().Format("15:04:05")
 	if manual {
 		msg += "manual"
 	} else {

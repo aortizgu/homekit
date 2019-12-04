@@ -6,14 +6,12 @@ import (
 )
 
 type Event struct {
-	Type      string // "join", "leave", or "message"
-	User      string
-	Timestamp int    // Unix timestamp (secs)
-	Device    string // What the user said (if Type == "message")
-	Status    string // error or ok
-	Uptime    string // What the user said (if Type == "message")
-	Temp      string
-	Active    bool
+	Timestamp  int // Unix timestamp (secs)
+	SensorTemp float64
+	DeviceTemp float64
+	Status     bool
+	Active     bool
+	Manual     bool
 }
 
 type Subscription struct {
@@ -27,8 +25,8 @@ func (s Subscription) Cancel() {
 	drain(s.New)         // Drain it, just in case there was a pending publish.
 }
 
-func newEvent(typ, user, device, status, uptime, temp string, active bool) Event {
-	return Event{typ, user, int(time.Now().Unix()), device, status, uptime, temp, active}
+func NewEvent(sensorTemp, deviceTemp float64, status, active, manual bool) Event {
+	return Event{int(time.Now().Unix()), sensorTemp, deviceTemp, status, active, manual}
 }
 
 func Subscribe() Subscription {
@@ -38,15 +36,15 @@ func Subscribe() Subscription {
 }
 
 func Join(user string) {
-	publish <- newEvent("join", user, "", "", "", "", false)
+	//publish <- newEvent("join", user, "", "", "", "", false)
 }
 
-func Say(user, device, status, uptime, temp string, active bool) {
-	publish <- newEvent("message", user, device, status, uptime, temp, active)
+func Publish(e Event) {
+	publish <- e
 }
 
 func Leave(user string) {
-	publish <- newEvent("leave", user, "", "", "", "", false)
+	//publish <- newEvent("leave", user, "", "", "", "", false)
 }
 
 const archiveSize = 1

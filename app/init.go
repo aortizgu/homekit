@@ -2,12 +2,29 @@ package app
 
 import (
 	"homekit/app/models"
+	"homekit/app/notifier"
+	"log"
+	"time"
 
 	rgorp "github.com/revel/modules/orm/gorp/app"
 	"github.com/revel/revel"
 	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/gorp.v2"
 )
+
+func checkUserExists(db *gorp.DbMap, name, user, password string) {
+	var u models.User
+	err := db.SelectOne(&u, "select * from user where username=?", user)
+	if err != nil {
+		bcryptPassword, _ := bcrypt.GenerateFromPassword(
+			[]byte(password), bcrypt.DefaultCost)
+		user := &models.User{0, name, user, password, bcryptPassword}
+		if err := db.Insert(user); err != nil {
+			panic(err)
+		}
+	}
+
+}
 
 func init() {
 	// Filters is the default set of global filters.
@@ -43,18 +60,12 @@ func init() {
 
 		t = Dbm.AddTable(models.Meassurement{})
 
-		rgorp.Db.TraceOn(revel.AppLog)
+		//rgorp.Db.TraceOn(revel.AppLog)
 		Dbm.CreateTables()
-
-		var u models.User
-		err := Dbm.SelectOne(&u, "select * from user where username=?", "demo")
-		if err != nil {
-			bcryptPassword, _ := bcrypt.GenerateFromPassword(
-				[]byte("demo"), bcrypt.DefaultCost)
-			demoUser := &models.User{0, "Demo User", "demo", "demo", bcryptPassword}
-			if err := Dbm.Insert(demoUser); err != nil {
-				panic(err)
-			}
+		checkUserExists(Dbm, "User demo", "demo", "demo")
+		checkUserExists(Dbm, "Adrián Ortiz Gutiérrez", "aortiz", "orgut")
+		if err := notifier.SendMail("Aplicación Arrancada "+time.Now().Format("15:04:05"), "Se acaba de iniciar la aplicación"); err != nil {
+			log.Println("Cannot send mail for [Aplicación Arrancada]", err)
 		}
 	}, 5)
 }

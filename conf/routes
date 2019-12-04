@@ -10,6 +10,7 @@ GET     /                                       Application.Index
 POST    /login                                  Application.Login
 GET     /logout                                 Application.Logout
 GET     /dashboard                              Dashboard.Index
+GET     /dashboard/meassurements                Dashboard.Meassurements
 WS      /dashboard/live                         Dashboard.Live
 GET     /rules                                  Rules.Index
 GET     /rules/:device                          Rules.GetDeviceRules

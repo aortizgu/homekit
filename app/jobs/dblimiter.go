@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	maxMeassurements int64 = 10 * 1000
+	maxMeassurements int64 = (24 * 60) / 10
 )
 
 // DbLimiter limits the entries for the db
