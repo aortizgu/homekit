@@ -2,26 +2,55 @@
 {{template "header.html" .}}
 
 
-<div id="no-connection" class="container container-body" hidden>
-  <div class="my_jumbo jumbotron jumbotron-fluid">
-    <h3>
-      <center style="color: red;">¡CONEXIÓN PERDIDA!</center>
-    </h3>
-  </div>
-</div>
 <div class="my-container">
-  <div class="col-xs-12 col-md-12 col-lg-12">
-    <div class="row">
-      <div class="led led-green" hidden></div>
-      <div class="led led-red" hidden></div>
-      <h1 class="text-center" id="curr-temp"></h1>
+  <div id="error-connection" class="container container-body" hidden>
+    <div class="my_jumbo jumbotron jumbotron-fluid">
+      <h3>
+        <center style="color: red;">Conexión con servidor perdida</center>
+      </h3>
     </div>
   </div>
-</div>
-<div class="container">
-
+  <div id="error-system" class="container container-body" hidden>
+    <div class="my_jumbo jumbotron jumbotron-fluid">
+      <h3>
+        <center style="color: red;">Error en el sistema</center>
+      </h3>
+    </div>
+  </div>
   <div class="row">
-    <div style="width:80%;margin: auto;">
+    <div class="card-deck">
+      <div class="card text-white bg-primary">
+        <div class="card-header">Temperatura Actual Salón</div>
+        <div class="card-body">
+          <h5 class="card-title" id="curr-temp-salon"></h5>
+          <p class="card-text"></p>
+        </div>
+      </div>
+      <div class="card text-white bg-primary">
+        <div class="card-header">Temperatura Actual Caldera</div>
+        <div class="card-body">
+          <h5 class="card-title" id="curr-temp-caldera"></h5>
+          <p class="card-text"></p>
+        </div>
+      </div>
+      <div class="card text-white bg-primary">
+        <div class="card-header">Temperatura Actual Exterior</div>
+        <div class="card-body">
+          <h5 class="card-title" id="curr-temp-exterior"></h5>
+          <p class="card-text"></p>
+        </div>
+      </div>
+      <div id="card-status" class="card text-white bg-primary">
+        <div class="card-header">Estado Calefación</div>
+        <div class="card-body">
+          <h5 class="card-title" id="card-status-tittle"></h5>
+          <p class="card-text" id="card-status-text"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="jumbotron jumbotron-fluid" id="chart" style="width:60%;margin: auto;">
       <canvas id="canvas"></canvas>
     </div>
   </div>
@@ -36,10 +65,10 @@
         var date = (new Date(meassurement["Time"] * 1000)).toLocaleString()
         config.data.labels.push(date);
 
-        config.data.datasets[0].data.push(meassurement["ValCaldera"])
-        config.data.datasets[1].data.push(meassurement["ValSensor"])
+        config.data.datasets[0].data.push(meassurement["ValCaldera"].toFixed(2))
+        config.data.datasets[1].data.push(meassurement["ValSensor"].toFixed(2))
         if (meassurement["Active"]) {
-          config.data.datasets[2].data.push(meassurement["ValCaldera"])
+          config.data.datasets[2].data.push(meassurement["ValCaldera"].toFixed(2))
         } else {
           config.data.datasets[2].data.push(0)
 
@@ -79,7 +108,7 @@
       },
       responsive: true,
       title: {
-        display: true,
+        display: false,
         text: 'Temperaturtas registradas'
       },
       tooltips: {
@@ -109,33 +138,62 @@
     }
   };
 
-  window.onload = function () {
+  $("document").ready( function () {
     var ctx = document.getElementById('canvas').getContext('2d')
     window.myLine = new Chart(ctx, config)
     WebSocketInit()
     RenderChart()
-  };
+  })
 
-  function connectionLost() {
-    $("#no-connection").show();
+  function connectionKO() {
+    $("#error-connection").show();
   }
 
   function connectionOK() {
-    $("#no-connection").hide();
+    $("#error-connection").hide();
+  }
+
+  function systemKO() {
+    $("#error-system").show();
+  }
+
+  function systemOK() {
+    $("#error-system").hide();
+  }
+
+  function systemON(manual) {
+    $("#card-status").find(".bg-secondary").addClass("bg-success").removeClass("bg-secondary");
+    $("#card-status-tittle").html("Calefacción encendida")
+    if (manual) {
+      $("#card-status-text").html("Calefacción encendida manualmente")
+    } else {
+      $("#card-status-text").html("Calefacción encendida automáticamente")
+    }
+  }
+
+  function systemOFF() {
+    $("#card-status").find(".bg-success").addClass("bg-secondary").removeClass("bg-success");
+    $("#card-status-tittle").html("Calefacción apagada")
+    $("#card-status-text").html("")
   }
 
   function newLiveData(event) {
     var msg = JSON.parse(event.data);
     if (msg != undefined) {
       console.log(msg)
-      if (msg["Active"]) {
-        $(".led-green").show()
-        $(".led-red").hide()
+      if (msg["Status"]) {
+        systemOK()
       } else {
-        $(".led-green").hide()
-        $(".led-red").show()
+        systemKO()
       }
-      $("#curr-temp").html(msg["DeviceTemp"] + "ºC")
+      if (msg["Active"]) {
+        systemON(msg["Manual"])
+      } else {
+        systemOFF()
+      }
+      $("#curr-temp-salon").html(msg["SensorTemp"] + " ºC")
+      $("#curr-temp-caldera").html(msg["DeviceTemp"] + " ºC")
+      $("#curr-temp-exterior").html(msg["DeviceTemp"] + " ºC")
     }
   }
 
@@ -149,7 +207,7 @@
       };
 
       ws.onclose = function () {
-        connectionLost()
+        connectionKO()
         setTimeout(function () { WebSocketInit() }, 5000);
       };
 

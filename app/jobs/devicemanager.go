@@ -53,14 +53,15 @@ func (c DeviceManager) Run() {
 	active := false
 	manual := false
 	status := false
-	calderaTemp := 0.0
 	sensorTemp, err := tempsensor.GetTemp()
 	tempsensor.CheckError(err)
 	if err == nil {
 		active, manual = c.evaluateState(sensorTemp)
 	}
 
-	err = nil //c.setState(active)
+	// calderadevice.setState(active)
+	// calderadevice.CheckError(err)
+	calderaTemp, err := calderadevice.GetTemp()
 	calderadevice.CheckError(err)
 
 	status = !calderadevice.CalderaError && !tempsensor.SensorError

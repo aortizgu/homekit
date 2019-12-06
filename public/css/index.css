@@ -1,6 +1,10 @@
+body{
+    background-color: #212529dc;
+}
+
 .my-container {
     width: auto;
-    padding: 50px;
+    padding: 25px;
 }
 
 .chart-container {
@@ -31,84 +35,13 @@ canvas{
     -ms-user-select: none;
 }
 
-.led {
-    padding: 20px;
+#chart{
+    width:60%;
     margin: auto;
-    height: 30px;
-    width: 30px;
 }
 
-
-.led-red {
-   background-color: #F00;
-  border-radius: 50%;
-  box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #441313 0 -1px 9px, rgba(255, 0, 0, 0.5) 0 2px 12px;
-  -webkit-animation: blinkRed 0.5s infinite;
-  -moz-animation: blinkRed 0.5s infinite;
-  -ms-animation: blinkRed 0.5s infinite;
-  -o-animation: blinkRed 0.5s infinite;
-  animation: blinkRed 0.5s infinite;
+.card-deck {
+    margin: 0 auto; /* Added */
+    float: none; /* Added */
+    margin-bottom: 10px; /* Added */
 }
-
-@-webkit-keyframes blinkRed {
-    from { background-color: #F00; }
-    50% { background-color: #A00; box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #441313 0 -1px 9px, rgba(255, 0, 0, 0.5) 0 2px 0;}
-    to { background-color: #F00; }
-}
-@-moz-keyframes blinkRed {
-    from { background-color: #F00; }
-    50% { background-color: #A00; box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #441313 0 -1px 9px, rgba(255, 0, 0, 0.5) 0 2px 0;}
-    to { background-color: #F00; }
-}
-@-ms-keyframes blinkRed {
-    from { background-color: #F00; }
-    50% { background-color: #A00; box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #441313 0 -1px 9px, rgba(255, 0, 0, 0.5) 0 2px 0;}
-    to { background-color: #F00; }
-}
-@-o-keyframes blinkRed {
-    from { background-color: #F00; }
-    50% { background-color: #A00; box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #441313 0 -1px 9px, rgba(255, 0, 0, 0.5) 0 2px 0;}
-    to { background-color: #F00; }
-}
-@keyframes blinkRed {
-    from { background-color: #F00; }
-    50% { background-color: #A00; box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #441313 0 -1px 9px, rgba(255, 0, 0, 0.5) 0 2px 0;}
-    to { background-color: #F00; }
-}
-
-.led-green {
-    background-color:  #ABFF00;
-    border-radius: 50%;
-    box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #304701 0 -1px 9px, #89FF00 0 2px 12px;
-    -webkit-animation: blinkGreen 0.5s infinite;
-    -moz-animation: blinkGreen 0.5s infinite;
-    -ms-animation: blinkGreen 0.5s infinite;
-    -o-animation: blinkGreen 0.5s infinite;
-    animation: blinkGreen 0.5s infinite;
-  }
-  
-  @-webkit-keyframes blinkGreen {
-      from { background-color:  #ABFF00; }
-      50% { background-color: #ABFF00; box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #441313 0 -1px 9px, rgba(123, 255, 0, 0.5) 0 2px 0;}
-      to { background-color:  #ABFF00; }
-  }
-  @-moz-keyframes blinkGreen {
-      from { background-color:  #ABFF00; }
-      50% { background-color: #ABFF00; box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #441313 0 -1px 9px, rgba(123, 255, 0, 0.5) 0 2px 0;}
-      to { background-color:  #ABFF00; }
-  }
-  @-ms-keyframes blinkGreen {
-      from { background-color:  #ABFF00; }
-      50% { background-color: #A00; box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #441313 0 -1px 9px, rgba(123, 255, 0, 0.5) 0 2px 0;}
-      to { background-color:  #ABFF00; }
-  }
-  @-o-keyframes blinkGreen {
-      from { background-color:  #ABFF00; }
-      50% { background-color: rgb(96, 170, 0); box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #254413 0 -1px 9px, rgba(123, 255, 0, 0.5) 0 2px 0;}
-      to { background-color:  #ABFF00; }
-  }
-  @keyframes blinkGreen {
-      from { background-color:  #ABFF00; }
-      50% { background-color: #ABFF00; box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #441313 0 -1px 9px, rgba(123, 255, 0, 0.5) 0 2px 0;}
-      to { background-color:  #ABFF00; }
-  }

@@ -4,6 +4,7 @@ import (
 	"homekit/app/notifier"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"strconv"
 	"time"
@@ -22,8 +23,25 @@ var (
 	// CalderaError state of error of the device
 	CalderaError bool = false
 	// CalderaActive state of the caldera output
-	CalderaActive bool = false
+	CalderaActive  bool   = false
+	calderaAddress net.IP = net.IPv4zero
 )
+
+func refreshDeviceIP() net.IP {
+	if calderaAddress.IsUnspecified() {
+		ips, err := net.LookupIP(Caldera + domain)
+		if err != nil {
+			log.Println("LookupIP error, ", err)
+			calderaAddress = net.IPv4zero
+		} else if len(ips) != 1 {
+			log.Println("multiple ips to one service, not implemented")
+			calderaAddress = net.IPv4zero
+		} else {
+			calderaAddress = ips[0]
+		}
+	}
+	return calderaAddress
+}
 
 // CheckError check if error state and notify
 func CheckError(err error) {
@@ -38,6 +56,7 @@ func CheckError(err error) {
 	} else {
 		if !CalderaError {
 			CalderaError = true
+			calderaAddress = net.IPv4zero
 			if err := notifier.SendMail("Error de comunicación "+time.Now().Format("15:04:05"), "No hay comunicación con el dispositivo caldera"); err != nil {
 				log.Println("Cannot send mail for [Error de comunicación]", err)
 				CalderaError = false // no notification sent
@@ -48,7 +67,7 @@ func CheckError(err error) {
 
 // GetTemp returns the caldera temperature readed
 func GetTemp() (float64, error) {
-	resp, err := http.Get("http://" + Caldera + domain + tempURI)
+	resp, err := http.Get("http://" + refreshDeviceIP().String() + tempURI)
 	if err != nil {
 		return 0.0, err
 	}
@@ -63,7 +82,8 @@ func GetTemp() (float64, error) {
 
 // GetUpTime returns the caldera up time
 func GetUpTime() (string, error) {
-	resp, err := http.Get("http://" + Caldera + domain + uptimeURI)
+	refreshDeviceIP()
+	resp, err := http.Get("http://" + refreshDeviceIP().String() + uptimeURI)
 	if err != nil {
 		return "", err
 	}
@@ -74,11 +94,12 @@ func GetUpTime() (string, error) {
 
 // SetState sets the caldera state
 func SetState(state bool) error {
+	refreshDeviceIP()
 	active := "off"
 	if state {
 		active = "on"
 	}
-	resp, err := http.Get("http://" + Caldera + domain + relayStateURI + active)
+	resp, err := http.Get("http://" + refreshDeviceIP().String() + relayStateURI + active)
 	if err != nil {
 		return err
 	}

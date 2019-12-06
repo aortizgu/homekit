@@ -58,6 +58,9 @@ func (c Application) getUser(username string) (user *models.User) {
 
 // Index show index page
 func (c Application) Index() revel.Result {
+	if user := c.connected(); user != nil {
+		return c.Redirect(routes.Dashboard.Index())
+	}
 	return c.Render()
 }
 
