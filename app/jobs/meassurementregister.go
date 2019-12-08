@@ -2,6 +2,7 @@ package jobs
 
 import (
 	"homekit/app/calderadevice"
+	"homekit/app/devicemanager"
 	"homekit/app/models"
 	"homekit/app/tempsensor"
 	"time"
@@ -22,10 +23,11 @@ func (c MeassurementRegister) Run() {
 	calderaTemp, err := calderadevice.GetTemp()
 	calderadevice.CheckError(err)
 	meassurement := models.Meassurement{
-		Time:       time.Now().Unix(),
-		ValCaldera: calderaTemp,
-		ValSensor:  sensorTemp,
-		Active:     calderadevice.CalderaActive}
+		Time:        time.Now().Unix(),
+		ValCaldera:  calderaTemp,
+		ValSensor:   sensorTemp,
+		ValExterior: devicemanager.LastExternalWeatherTemp,
+		Active:      calderadevice.CalderaActive}
 	if err := gorp.Db.Map.Insert(&meassurement); err != nil {
 		panic(err)
 	}
@@ -34,6 +36,6 @@ func (c MeassurementRegister) Run() {
 func init() {
 	revel.OnAppStart(func() {
 		jobs.Now(MeassurementRegister{})
-		jobs.Schedule("@every 10m", MeassurementRegister{})
+		jobs.Schedule("@every 10s", MeassurementRegister{})
 	})
 }

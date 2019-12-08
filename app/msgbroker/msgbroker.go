@@ -6,12 +6,13 @@ import (
 )
 
 type Event struct {
-	Timestamp  int // Unix timestamp (secs)
-	SensorTemp float64
-	DeviceTemp float64
-	Status     bool
-	Active     bool
-	Manual     bool
+	Timestamp    int // Unix timestamp (secs)
+	SensorTemp   float64
+	DeviceTemp   float64
+	ExternalTemp float64
+	Status       bool
+	Active       bool
+	Manual       bool
 }
 
 type Subscription struct {
@@ -25,8 +26,8 @@ func (s Subscription) Cancel() {
 	drain(s.New)         // Drain it, just in case there was a pending publish.
 }
 
-func NewEvent(sensorTemp, deviceTemp float64, status, active, manual bool) Event {
-	return Event{int(time.Now().Unix()), sensorTemp, deviceTemp, status, active, manual}
+func NewEvent(sensorTemp, deviceTemp, externalTemp float64, status, active, manual bool) Event {
+	return Event{int(time.Now().Unix()), sensorTemp, deviceTemp, externalTemp, status, active, manual}
 }
 
 func Subscribe() Subscription {

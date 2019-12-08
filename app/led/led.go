@@ -35,7 +35,7 @@ func setLine(i int, msg string) {
 }
 
 func Update(e msgbroker.Event) {
-	setLine(line1, "In "+fmt.Sprintf("%.1f", e.SensorTemp)+" Ex "+fmt.Sprintf("%.1f", e.DeviceTemp))
+	setLine(line1, "In "+fmt.Sprintf("%.1f", e.SensorTemp)+" Ex "+fmt.Sprintf("%.1f", e.ExternalTemp))
 	msg := ""
 	if !e.Status {
 		msg = "Error en sistema"

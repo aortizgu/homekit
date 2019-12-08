@@ -68,7 +68,7 @@ func (c Application) Login(username, password string) revel.Result {
 		err := bcrypt.CompareHashAndPassword(user.HashedPassword, []byte(password))
 		if err == nil {
 			c.Session["user"] = username
-			c.Session.SetDefaultExpiration()
+			c.Session.SetNoExpiration()
 			return c.Redirect(routes.Dashboard.Index())
 		}
 	}

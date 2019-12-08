@@ -65,12 +65,13 @@
         var date = (new Date(meassurement["Time"] * 1000)).toLocaleString()
         config.data.labels.push(date);
 
-        config.data.datasets[0].data.push(meassurement["ValCaldera"].toFixed(2))
-        config.data.datasets[1].data.push(meassurement["ValSensor"].toFixed(2))
+        config.data.datasets[0].data.push(meassurement["ValExterior"].toFixed(2))
+        config.data.datasets[1].data.push(meassurement["ValCaldera"].toFixed(2))
+        config.data.datasets[2].data.push(meassurement["ValSensor"].toFixed(2))
         if (meassurement["Active"]) {
-          config.data.datasets[2].data.push(meassurement["ValCaldera"].toFixed(2))
+          config.data.datasets[3].data.push(meassurement["ValCaldera"].toFixed(2))
         } else {
-          config.data.datasets[2].data.push(0)
+          config.data.datasets[3].data.push(0)
 
         }
         window.myLine.update();
@@ -86,6 +87,12 @@
         label: 'Temperaturas exterior',
         backgroundColor: window.chartColors.green,
         borderColor: window.chartColors.green,
+        data: [],
+        fill: false,
+      },{
+        label: 'Temperaturas caldera',
+        backgroundColor: window.chartColors.orange,
+        borderColor: window.chartColors.orange,
         data: [],
         fill: false,
       }, {
@@ -193,7 +200,7 @@
       }
       $("#curr-temp-salon").html(msg["SensorTemp"].toFixed(2) + " ºC")
       $("#curr-temp-caldera").html(msg["DeviceTemp"].toFixed(2) + " ºC")
-      $("#curr-temp-exterior").html(msg["DeviceTemp"].toFixed(2) + " ºC")
+      $("#curr-temp-exterior").html(msg["ExternalTemp"].toFixed(2) + " ºC")
     }
   }
 

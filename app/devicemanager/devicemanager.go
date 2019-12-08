@@ -1,12 +1,15 @@
 package devicemanager
 
 import (
+	"encoding/json"
 	"homekit/app/calderadevice"
 	"homekit/app/devicerules"
 	"homekit/app/led"
 	"homekit/app/msgbroker"
 	"homekit/app/notifier"
 	"homekit/app/tempsensor"
+	"log"
+	"net/http"
 	"time"
 )
 
@@ -14,12 +17,24 @@ import (
 type DeviceManager struct {
 }
 
-func (c DeviceManager) evaluateState(temp float64) (bool, bool) {
+const hysteresis float64 = 1.0        // 1 degree of hysteresis
+const externalWeatherPeriod = 30 * 60 // half hour
+
+var lastExternalWeatherRequest = 0
+var LastExternalWeatherTemp = 0.0
+
+func (c DeviceManager) evaluateState(temp float64, activeNow bool) (bool, bool) {
 	active := false
 	manual := false
 	if rules, err := devicerules.DeviceRules.GetWeekRule(calderadevice.Caldera); err == nil {
 		limitTemp := rules.GetFloatTemp()
-		if temp < limitTemp {
+		mustActivate := false
+		if activeNow {
+			mustActivate = temp < limitTemp+hysteresis
+		} else {
+			mustActivate = temp < limitTemp-hysteresis
+		}
+		if mustActivate {
 			if rules.Manual {
 				active = true
 				manual = true
@@ -54,7 +69,7 @@ func (c DeviceManager) Run() {
 	sensorTemp, err := tempsensor.GetTemp()
 	tempsensor.CheckError(err)
 	if err == nil {
-		active, manual = c.evaluateState(sensorTemp)
+		active, manual = c.evaluateState(sensorTemp, calderadevice.CalderaActive)
 	}
 
 	err = calderadevice.SetState(active)
@@ -68,7 +83,22 @@ func (c DeviceManager) Run() {
 		notifier.NotifyCalderaState(active, manual)
 		calderadevice.CalderaActive = active
 	}
-	e := msgbroker.NewEvent(sensorTemp, calderaTemp, status, active, manual)
+
+	if int(time.Now().Unix())-lastExternalWeatherRequest > externalWeatherPeriod {
+		resp, err := http.Get("https://api.openweathermap.org/data/2.5/weather?units=metric&q=Fuenlabrada,es&appid=62b6faef972916a25c2420b17af38d40")
+		defer resp.Body.Close()
+		if err == nil {
+			lastExternalWeatherRequest = int(time.Now().Unix())
+			var info map[string]interface{}
+			json.NewDecoder(resp.Body).Decode(&info)
+			main := info["main"].(map[string]interface{})
+			LastExternalWeatherTemp = main["temp"].(float64)
+		} else {
+			log.Println("Cannot get external temp", err)
+		}
+
+	}
+	e := msgbroker.NewEvent(sensorTemp, calderaTemp, LastExternalWeatherTemp, status, active, manual)
 	msgbroker.Publish(e)
 	led.Update(e)
 }
