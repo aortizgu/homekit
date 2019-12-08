@@ -36,6 +36,6 @@ func (c MeassurementRegister) Run() {
 func init() {
 	revel.OnAppStart(func() {
 		jobs.Now(MeassurementRegister{})
-		jobs.Schedule("@every 10s", MeassurementRegister{})
+		jobs.Schedule("@every 10m", MeassurementRegister{})
 	})
 }
