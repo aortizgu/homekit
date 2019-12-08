@@ -1,2 +1,4 @@
 OOS=linux GOARCH=arm GOARM=7 CGO_ENABLED=1 CC="arm-linux-gnueabihf-gcc-7" CXX="arm-linux-gnueabihf-g++-7" revel package
 scp homekit.tar.gz aortiz@orangepizero.local:~/homekit/
+openssl req -x509 -newkey rsa:4096 -keyout homekit.key.pem -out homekit.cert.pem -days 365
+openssl rsa -in key.pem -out key.unencrypted.pem -passin pass:TYPE_YOUR_PASS

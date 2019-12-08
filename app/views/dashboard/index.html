@@ -191,9 +191,9 @@
       } else {
         systemOFF()
       }
-      $("#curr-temp-salon").html(msg["SensorTemp"] + " ºC")
-      $("#curr-temp-caldera").html(msg["DeviceTemp"] + " ºC")
-      $("#curr-temp-exterior").html(msg["DeviceTemp"] + " ºC")
+      $("#curr-temp-salon").html(msg["SensorTemp"].toFixed(2) + " ºC")
+      $("#curr-temp-caldera").html(msg["DeviceTemp"].toFixed(2) + " ºC")
+      $("#curr-temp-exterior").html(msg["DeviceTemp"].toFixed(2) + " ºC")
     }
   }
 

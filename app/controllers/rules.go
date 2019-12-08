@@ -1,101 +1,15 @@
 package controllers
 
 import (
-	"encoding/json"
 	"errors"
-	"fmt"
+	"homekit/app/devicemanager"
+	"homekit/app/devicerules"
 	"homekit/app/routes"
-	"io/ioutil"
 	"log"
-	"os"
 	"strconv"
 	"strings"
 
 	"github.com/revel/revel"
-)
-
-const (
-	configFilename string = "rules.json"
-	weekDays       int    = 7
-)
-
-type timeRule struct {
-	Hour   int
-	Minute int
-}
-
-type dayRule struct {
-	Enabled bool
-	Name    string
-	Start   timeRule
-	End     timeRule
-}
-
-type weekRule struct {
-	DeviceName      string
-	TemperatureInt  int
-	TemperatureFrac int
-	Manual          bool
-	Days            [weekDays]dayRule
-}
-
-func (c weekRule) GetFloatTemp() float64 {
-	if c.TemperatureFrac == 0 {
-		return float64(c.TemperatureInt)
-	}
-	return float64(c.TemperatureInt) + float64(c.TemperatureFrac)/10
-}
-
-// DeviceRulesStorage storage of rules inxed by device name
-type DeviceRulesStorage map[string]weekRule
-
-func (c DeviceRulesStorage) getDevices() []string {
-	devices := make([]string, 0, len(c))
-	for device := range c {
-		devices = append(devices, device)
-	}
-	return devices
-}
-
-func (c DeviceRulesStorage) storeConfig() {
-	jsonFile, _ := json.MarshalIndent(DeviceRules, "", " ")
-	_ = ioutil.WriteFile(configFilename, jsonFile, 0644)
-}
-
-func (c DeviceRulesStorage) loadConfig() {
-	jsonFile, err := os.Open(configFilename)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer jsonFile.Close()
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-	json.Unmarshal(byteValue, &DeviceRules)
-}
-
-func (c DeviceRulesStorage) loadRules() revel.Result {
-	if fileExists(configFilename) {
-		c.loadConfig()
-		log.Println(DeviceRules)
-	} else {
-		rule := weekRule{
-			DeviceName: "Calefacción",
-		}
-		for index := 0; index < weekDays; index++ {
-			rule.Days[index].Name = weekDaysName[index]
-			rule.Days[index].Enabled = false
-		}
-		DeviceRules["caldera"] = rule
-		c.storeConfig()
-	}
-	return nil
-}
-
-var (
-	// DeviceRules configuration of rules of devices
-	DeviceRules  = make(DeviceRulesStorage)
-	weekDaysName = []string{
-		"Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo",
-	}
 )
 
 func getHMFromString(s string) (int, int, error) {
@@ -131,14 +45,14 @@ func (c Rules) checkUser() revel.Result {
 
 // Index shows index page of rules
 func (c Rules) Index() revel.Result {
-	devices := DeviceRules.getDevices()
+	devices := devicerules.DeviceRules.GetDevices()
 	return c.Render(devices)
 }
 
 // GetDeviceRules shows rules for an input device
 func (c Rules) GetDeviceRules(device string) revel.Result {
-	if rules, ok := DeviceRules[device]; ok {
-		devices := DeviceRules.getDevices()
+	if rules, err := devicerules.DeviceRules.GetWeekRule(device); err == nil {
+		devices := devicerules.DeviceRules.GetDevices()
 		return c.Render(device, devices, rules)
 	}
 	return c.Redirect(routes.Rules.Index())
@@ -146,7 +60,7 @@ func (c Rules) GetDeviceRules(device string) revel.Result {
 
 // SetDeviceRules set rules for an input device
 func (c Rules) SetDeviceRules(device string) revel.Result {
-	if rules, ok := DeviceRules[device]; ok {
+	if rules, err := devicerules.DeviceRules.GetWeekRule(device); err == nil {
 		c.Log.Info("Seting device rules  ", c.Params)
 		tInt, err := strconv.Atoi(c.Params.Get("temp-int"))
 		if err != nil {
@@ -162,14 +76,14 @@ func (c Rules) SetDeviceRules(device string) revel.Result {
 		}
 		manual := c.Params.Get("manual")
 		rules.Manual = manual == "on"
-		for i := 0; i < weekDays; i++ {
+		for i := 0; i < devicerules.WeekDays; i++ {
 			iStr := strconv.Itoa(i)
-			d := dayRule{}
-			d.Name = weekDaysName[i]
+			d := devicerules.DayRule{}
+			d.Name = devicerules.WeekDaysName[i]
 			enabled := c.Params.Get("enabled-" + iStr)
 			d.Enabled = enabled == "on"
 
-			s := timeRule{}
+			s := devicerules.TimeRule{}
 			start := c.Params.Get("start-" + iStr)
 			if h, m, err := getHMFromString(start); err == nil {
 				s.Hour = h
@@ -177,7 +91,7 @@ func (c Rules) SetDeviceRules(device string) revel.Result {
 				d.Start = s
 			}
 
-			e := timeRule{}
+			e := devicerules.TimeRule{}
 			end := c.Params.Get("end-" + iStr)
 			if h, m, err := getHMFromString(end); err == nil {
 				e.Hour = h
@@ -188,21 +102,14 @@ func (c Rules) SetDeviceRules(device string) revel.Result {
 			rules.Days[i] = d
 		}
 
-		DeviceRules[device] = rules
-		DeviceRules.storeConfig()
+		devicerules.DeviceRules.SetWeekRule(device, rules)
+		devicerules.DeviceRules.StoreRules()
+		go devicemanager.Refresh()
 		return c.Redirect(routes.Rules.GetDeviceRules(device))
 	}
 	return c.Redirect(routes.Rules.Index())
 }
 
-func fileExists(filename string) bool {
-	info, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return !info.IsDir()
-}
-
 func init() {
-	DeviceRules.loadRules()
+	devicerules.DeviceRules.LoadRules()
 }

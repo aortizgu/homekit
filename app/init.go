@@ -1,9 +1,13 @@
 package app
 
 import (
+	"encoding/json"
+	"fmt"
 	"homekit/app/models"
 	"homekit/app/notifier"
+	"io/ioutil"
 	"log"
+	"os"
 	"time"
 
 	rgorp "github.com/revel/modules/orm/gorp/app"
@@ -12,18 +16,31 @@ import (
 	"gopkg.in/gorp.v2"
 )
 
-func checkUserExists(db *gorp.DbMap, name, user, password string) {
+func checkUserExists(db *gorp.DbMap, id int, name, username, password string) {
 	var u models.User
-	err := db.SelectOne(&u, "select * from user where username=?", user)
+	err := db.SelectOne(&u, "select * from user where username=?", username)
 	if err != nil {
 		bcryptPassword, _ := bcrypt.GenerateFromPassword(
 			[]byte(password), bcrypt.DefaultCost)
-		user := &models.User{0, name, user, password, bcryptPassword}
+		user := &models.User{id, name, username, password, bcryptPassword}
 		if err := db.Insert(user); err != nil {
 			panic(err)
 		}
 	}
+}
 
+func loadUsers(db *gorp.DbMap, filename string) {
+	var users []models.User
+	jsonFile, err := os.Open(filename)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer jsonFile.Close()
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	json.Unmarshal(byteValue, &users)
+	for _, user := range users {
+		checkUserExists(db, user.UserId, user.Name, user.Username, user.Password)
+	}
 }
 
 func init() {
@@ -62,8 +79,7 @@ func init() {
 
 		//rgorp.Db.TraceOn(revel.AppLog)
 		Dbm.CreateTables()
-		checkUserExists(Dbm, "User demo", "demo", "demo")
-		checkUserExists(Dbm, "Adrián Ortiz Gutiérrez", "aortiz", "orgut")
+		loadUsers(Dbm, "users.json")
 		if err := notifier.SendMail("Aplicación Arrancada "+time.Now().Format("15:04:05"), "Se acaba de iniciar la aplicación"); err != nil {
 			log.Println("Cannot send mail for [Aplicación Arrancada]", err)
 		}

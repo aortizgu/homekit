@@ -1,16 +1,13 @@
 package controllers
 
 import (
-	"homekit/app/models"
-
-	"golang.org/x/crypto/bcrypt"
-
-	"homekit/app/routes"
-
 	"database/sql"
+	"homekit/app/models"
+	"homekit/app/routes"
 
 	gorpController "github.com/revel/modules/orm/gorp/app/controllers"
 	"github.com/revel/revel"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Application main application to login and clients
@@ -71,7 +68,7 @@ func (c Application) Login(username, password string) revel.Result {
 		err := bcrypt.CompareHashAndPassword(user.HashedPassword, []byte(password))
 		if err == nil {
 			c.Session["user"] = username
-			c.Session.SetNoExpiration()
+			c.Session.SetDefaultExpiration()
 			return c.Redirect(routes.Dashboard.Index())
 		}
 	}
