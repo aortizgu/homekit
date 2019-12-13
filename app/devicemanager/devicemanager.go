@@ -17,7 +17,7 @@ import (
 type DeviceManager struct {
 }
 
-const hysteresis float64 = 1.0        // 1 degree of hysteresis
+const hysteresis float64 = 0.5        // degree of hysteresis
 const externalWeatherPeriod = 30 * 60 // half hour
 
 var lastExternalWeatherRequest = 0
