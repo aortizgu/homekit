@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 
 	"github.com/revel/revel"
@@ -21,8 +20,8 @@ var WeekDaysName = []string{
 }
 
 type TimeRule struct {
-	Hour   int
-	Minute int
+	Mins    int
+	TimeStr string
 }
 
 type DayRule struct {
@@ -95,7 +94,6 @@ func (c DeviceRulesStorage) StoreRules() {
 func (c DeviceRulesStorage) LoadRules() revel.Result {
 	if fileExists(configFilename) {
 		c.loadConfig()
-		log.Println(c.rules)
 	} else {
 		rule := WeekRule{
 			DeviceName: "Calefacción",
@@ -103,6 +101,8 @@ func (c DeviceRulesStorage) LoadRules() revel.Result {
 		for index := 0; index < WeekDays; index++ {
 			rule.Days[index].Name = WeekDaysName[index]
 			rule.Days[index].Enabled = false
+			rule.Days[index].Start = TimeRule{0, "00:00"}
+			rule.Days[index].End = TimeRule{0, "00:00"}
 		}
 		c.rules["caldera"] = rule
 		c.StoreRules()

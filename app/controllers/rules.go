@@ -76,32 +76,31 @@ func (c Rules) SetDeviceRules(device string) revel.Result {
 		}
 		manual := c.Params.Get("manual")
 		rules.Manual = manual == "on"
-		for i := 0; i < devicerules.WeekDays; i++ {
-			iStr := strconv.Itoa(i)
-			d := devicerules.DayRule{}
-			d.Name = devicerules.WeekDaysName[i]
-			enabled := c.Params.Get("enabled-" + iStr)
-			d.Enabled = enabled == "on"
+		if !rules.Manual {
+			for i := 0; i < devicerules.WeekDays; i++ {
+				iStr := strconv.Itoa(i)
+				d := devicerules.DayRule{}
+				d.Name = devicerules.WeekDaysName[i]
+				enabled := c.Params.Get("enabled-" + iStr)
+				d.Enabled = enabled == "on"
 
-			s := devicerules.TimeRule{}
-			start := c.Params.Get("start-" + iStr)
-			if h, m, err := getHMFromString(start); err == nil {
-				s.Hour = h
-				s.Minute = m
-				d.Start = s
+				start := c.Params.Get("start-" + iStr)
+				s := devicerules.TimeRule{0, start}
+				if h, m, err := getHMFromString(start); err == nil {
+					s.Mins = h*60 + m
+					d.Start = s
+				}
+
+				end := c.Params.Get("end-" + iStr)
+				e := devicerules.TimeRule{0, end}
+				if h, m, err := getHMFromString(end); err == nil {
+					e.Mins = h*60 + m
+					d.End = e
+				}
+
+				rules.Days[i] = d
 			}
-
-			e := devicerules.TimeRule{}
-			end := c.Params.Get("end-" + iStr)
-			if h, m, err := getHMFromString(end); err == nil {
-				e.Hour = h
-				e.Minute = m
-				d.End = e
-			}
-
-			rules.Days[i] = d
 		}
-
 		devicerules.DeviceRules.SetWeekRule(device, rules)
 		devicerules.DeviceRules.StoreRules()
 		go devicemanager.Refresh()

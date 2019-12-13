@@ -19,7 +19,8 @@
                                     value="{{.rules.TemperatureFrac}}"> ºC
                             </div>
                             {{$manual := .rules.Manual}}
-                            <span>Manual</span><input type="checkbox" name="manual" {{if $manual}}checked{{end}} />
+                            <span>Manual</span><input id="manual-check" type="checkbox" name="manual"
+                                {{if $manual}}checked{{end}} />
                             <table class="table">
                                 <thead>
                                     <tr>
@@ -29,20 +30,18 @@
                                 </thead>
                                 <tbody>
                                     {{range $index, $element := .rules.Days}}
-                                    <tr {{if $manual}}class="disabled" {{end}}>
+                                    <tr {{if $manual}} class="automatic-cfg disabled" {{else}} class="automatic-cfg" {{end}}>
                                         <td>{{.Name}}</td>
                                         <td>
-                                            <span>Habilitado</span><input type="checkbox" name="enabled-{{$index}}"
-                                                {{if .Enabled}}checked{{end}} {{if $manual}}disabled{{end}} />
+                                            <span>Habilitado</span><input class="automatic-cfg" type="checkbox" name="enabled-{{$index}}" {{if .Enabled}}checked{{end}} {{if $manual}}disabled{{end}} />
                                             <span style="margin-left: 2em"
                                                 class="glyphicon glyphicon-time"></span>Comienzo:<input
-                                                name="start-{{$index}}" class="clockpicker" type="text"
-                                                class="form-control" value="{{.Start.Hour}}:{{.Start.Minute}}"
-                                                {{if $manual}}disabled{{end}}>
+                                                name="start-{{$index}}" class="clockpicker automatic-cfg" type="text"
+                                                value="{{.Start.TimeStr}}"{{if $manual}}disabled{{end}}>
                                             <span style="margin-left: 2em"
                                                 class="glyphicon glyphicon-time"></span>Fin:<input name="end-{{$index}}"
-                                                class="clockpicker" type="text" class="form-control"
-                                                value="{{.End.Hour}}:{{.End.Minute}}" {{if $manual}}disabled{{end}}>
+                                                class="clockpicker automatic-cfg" type="text" class="form-control"
+                                                value="{{.End.TimeStr}}"{{if $manual}}disabled{{end}}>
                                         </td>
                                     </tr>
                                     {{end}}
@@ -63,15 +62,24 @@
 </div>
 
 <script type="text/javascript">
-    var $input = $('.clockpicker').clockpicker({
-        placement: 'bottom',
-        align: 'left',
-        donetext: 'Listo',
-        autoclose: true,
-        vibrate: true,
-        fromnow: 0
-    });
+    $("document").ready(function () {
+        var $input = $('.clockpicker').clockpicker({
+            placement: 'bottom',
+            align: 'left',
+            donetext: 'Listo',
+            autoclose: true,
+            vibrate: true,
+            fromnow: 0
+        });
+    })
+    $("#manual-check").click(function () {
+        $(".automatic-cfg").attr("disabled", this.checked);	
+        if(this.checked){
+            $(".automatic-cfg").addClass("disabled")
+        }else{
+            $(".automatic-cfg").removeClass("disabled")
+        }
+    })
 
-    $input.clockpicker('show');
 </script>
 {{template "footer.html" .}}

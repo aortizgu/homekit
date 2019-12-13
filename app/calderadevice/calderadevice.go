@@ -48,6 +48,7 @@ func CheckError(err error) {
 	if err == nil {
 		if CalderaError {
 			CalderaError = false
+			log.Println("calderadevice:: caldera Error ", CalderaError)
 			if err := notifier.SendMail("Comunicación establecida "+time.Now().Format("15:04:05"), "Se ha establecido comunicación con el dispositivo caldera"); err != nil {
 				log.Println("Cannot send mail for [Comunicación establecida]", err)
 				CalderaError = true // no notification sent
@@ -57,6 +58,7 @@ func CheckError(err error) {
 		if !CalderaError {
 			CalderaError = true
 			calderaAddress = net.IPv4zero
+			log.Println("calderadevice:: caldera Error ", CalderaError, " ", err)
 			if err := notifier.SendMail("Error de comunicación "+time.Now().Format("15:04:05"), "No hay comunicación con el dispositivo caldera"); err != nil {
 				log.Println("Cannot send mail for [Error de comunicación]", err)
 				CalderaError = false // no notification sent

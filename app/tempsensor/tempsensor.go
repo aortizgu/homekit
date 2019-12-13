@@ -23,6 +23,7 @@ func CheckError(err error) {
 	if err == nil {
 		if SensorError {
 			SensorError = false
+			log.Println("calderadevice:: caldera Error ", SensorError)
 			if err := notifier.SendMail("Sensor funcionando "+time.Now().Format("15:04:05"), "Se ha establecido comunicación con el sensor de temperatura"); err != nil {
 				log.Println("Cannot send mail for [Comunicación sensor]", err)
 				SensorError = true // no notification sent
@@ -31,6 +32,7 @@ func CheckError(err error) {
 	} else {
 		if !SensorError {
 			SensorError = true
+			log.Println("calderadevice:: caldera Error ", SensorError, " ", err)
 			if err := notifier.SendMail("Error de sensor "+time.Now().Format("15:04:05"), "No hay comunicación con el sensor de temperatura"); err != nil {
 				log.Println("Cannot send mail for [Error de sensor]", err)
 				SensorError = false // no notification sent

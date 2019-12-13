@@ -48,8 +48,8 @@ func (c DeviceManager) evaluateState(temp float64, activeNow bool) (bool, bool) 
 				dayRule := rules.Days[weekday]
 				if dayRule.Enabled {
 					hours, minutes, _ := time.Now().Clock()
-					minStart := dayRule.Start.Hour*60 + dayRule.Start.Minute
-					minStop := dayRule.End.Hour*60 + dayRule.End.Minute
+					minStart := dayRule.Start.Mins
+					minStop := dayRule.End.Mins
 					minCurrent := hours*60 + minutes
 					if minCurrent >= minStart && minCurrent <= minStop {
 						active = true
@@ -80,13 +80,13 @@ func (c DeviceManager) Run() {
 	status = !calderadevice.CalderaError && !tempsensor.SensorError
 
 	if calderadevice.CalderaActive != active {
+		log.Println("devicemanager:: new caldera device state ", active)
 		notifier.NotifyCalderaState(active, manual)
 		calderadevice.CalderaActive = active
 	}
 
 	if int(time.Now().Unix())-lastExternalWeatherRequest > externalWeatherPeriod {
 		resp, err := http.Get("https://api.openweathermap.org/data/2.5/weather?units=metric&q=Fuenlabrada,es&appid=62b6faef972916a25c2420b17af38d40")
-		defer resp.Body.Close()
 		if err == nil {
 			lastExternalWeatherRequest = int(time.Now().Unix())
 			var info map[string]interface{}
@@ -94,9 +94,9 @@ func (c DeviceManager) Run() {
 			main := info["main"].(map[string]interface{})
 			LastExternalWeatherTemp = main["temp"].(float64)
 		} else {
-			log.Println("Cannot get external temp", err)
+			log.Println("devicemanager:: cannot get external temp", err)
 		}
-
+		defer resp.Body.Close()
 	}
 	e := msgbroker.NewEvent(sensorTemp, calderaTemp, LastExternalWeatherTemp, status, active, manual)
 	msgbroker.Publish(e)
