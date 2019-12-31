@@ -6,8 +6,8 @@ import (
 )
 
 const (
-	mailSource         string = "homekit.ortiz.gutierrez.adrian@gmail.com"
-	mailSourcePassword string = "homekit.adrian"
+	mailSource         string = ""
+	mailSourcePassword string = ""
 )
 
 type smtpServer struct {
@@ -20,7 +20,7 @@ func (s *smtpServer) serverName() string {
 }
 
 var (
-	mailRecipients []string   = []string{"ortiz.gutierrez.adrian@gmail.com", "lauranton1592@gmail.com"}
+	mailRecipients []string   = []string{}
 	server         smtpServer = smtpServer{host: "smtp.gmail.com", port: "587"}
 )
 
