@@ -51,7 +51,7 @@ func (c DeviceManager) evaluateState(temp float64, activeNow bool) (bool, bool) 
 					minStart := dayRule.Start.Mins
 					minStop := dayRule.End.Mins
 					minCurrent := hours*60 + minutes
-					if minCurrent >= minStart && minCurrent <= minStop {
+					if minStart != minStop && minCurrent >= minStart && minCurrent <= minStop {
 						active = true
 					}
 				}
